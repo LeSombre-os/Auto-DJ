@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Auto-DJ</title>
+<link rel="icon" type="image/png" href="/static/icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div class="brand" title="Raccourcis : N = suivant · P = lecture/pause · F = rechercher · A = auto-file · + / − = volume · Espace = ducking"><span class="dot"></span>AUTO-DJ</div>
+  <div class="top-right">
+    <div id="link-badge" class="badge-off" hidden>Perte de liaison</div>
+    <button id="btn-quit" type="button" class="quit-btn clear-btn"
+      title="Arrêter complètement Auto-DJ, serveur compris (deux clics : le second confirme)">Tout couper</button>
+  </div>
+</header>
+
+<main id="console">
+
+  <section id="deck" aria-label="Platine">
+    <div id="now" class="deck-now">
+      <div class="np-head">
+        <span id="np-label" class="np-label">EN DIRECT</span>
+        <span class="np-badge fade" id="np-fade" hidden>FADE</span>
+        <span class="np-badge ducking" id="np-duck" hidden>DUCKING</span>
+        <span class="np-badge listen" id="preview-badge" hidden title="Écoute en cours — la file d'attente est suspendue">ÉCOUTE</span>
+      </div>
+      <div class="np-title" id="np-title">Aucune lecture</div>
+      <div class="np-sub">
+        <span id="np-time" class="np-time">— silence assuré</span>
+        <span id="np-next" class="np-next" hidden></span>
+      </div>
+      <div id="preview-notice" class="preview-notice" hidden>
+        File d'attente suspendue pendant l'écoute — « Revenir à la file » pour reprendre.
+      </div>
+    </div>
+
+    <div id="wave-wrap">
+      <canvas id="wave"></canvas>
+      <div id="wave-flat" hidden><div id="wave-flat-fill"></div></div>
+      <span id="time" aria-hidden="true">0:00 · 0:00</span>
+    </div>
+
+    <div class="deck-transport">
+      <button id="btn-play" class="play-btn" type="button" aria-label="Lecture / pause" title="Lecture / pause (P)">
+        <svg id="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="ico-pause" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      </button>
+      <button id="btn-skip" class="ctl-btn" type="button" aria-label="Passer à la piste suivante" title="Passer (N)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l8.5 6L6 18zM16 6h2v12h-2z"/></svg>
+      </button>
+      <button id="btn-duck" class="ctl-btn" type="button" aria-label="Ducking (touche Espace)" title="Espace = basculer le ducking">DUCKING</button>
+      <button type="button" class="info" aria-describedby="tip-duck" aria-label="Aide : ducking">ⓘ<span class="info-tip" id="tip-duck" role="tooltip">Baisse le son pour parler — touche Espace.</span></button>
+      <button id="btn-back-queue" class="back-queue" type="button" hidden>← Revenir à la file</button>
+    </div>
+
+    <div class="deck-mixer">
+      <div class="ctrl">
+        <svg class="ctl-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 9v6h4l5 4V5L7 9H3z"/>
+          <path d="M16 8a5 5 0 0 1 0 8M18.5 5.5a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <input id="vol" type="range" min="0" max="100" value="100" step="1" aria-label="Volume">
+        <span id="vol-val" class="ctrl-val">100%</span>
+      </div>
+
+      <div class="ctrl" id="xf-wrap">
+        <svg class="ctl-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 12a8 8 0 0 1 8-8M20 12a8 8 0 0 1-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M12 5v2M12 17v2M5 12h2M17 12h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <input id="xf" type="range" min="2" max="16" value="6" step="0.5" aria-label="Durée du crossfade">
+        <span id="xf-val" class="ctrl-val">6.0 s</span>
+      </div>
+
+      <div class="ctrl curve-ctl">
+        <label for="xf-curve" class="ctrl-lbl">Courbe</label>
+        <select id="xf-curve">
+          <option value="linear">Linéaire</option>
+          <option value="equal_power" selected>Égal-puissance</option>
+          <option value="smooth">Douce</option>
+          <option value="cut">Coupe</option>
+        </select>
+        <button type="button" class="info" aria-describedby="tip-curve" aria-label="Aide : courbe de crossfade">ⓘ<span class="info-tip" id="tip-curve" role="tooltip">Égal-puissance : idéal entre deux morceaux différents. Linéaire : transition douce. Douce : départ/arrivée progressifs. Coupe : fondu très court (0,35 s).</span></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="library" aria-label="Bibliothèque">
+
+    <section id="col-queue" aria-label="File d'attente">
+      <div class="col-head">
+        <div class="ch-l">
+          <h2>File d'attente</h2>
+          <span id="queue-stats" class="ch-stats"></span>
+        </div>
+        <div class="auto-ctl">
+          <button id="btn-auto" type="button" class="auto-btn" aria-pressed="false"
+            title="Auto-file : remplit la file automatiquement au fil de la soirée (évite les répétitions d'artiste, les morceaux récents et les doublons)">AUTO</button>
+          <button id="btn-fill" type="button" class="auto-btn"
+            title="Remplir : ajoute 10 morceaux choisis dans la banque (évite les répétitions d'artiste, les morceaux récents et les doublons)">Remplir</button>
+          <button id="btn-clear" type="button" class="auto-btn clear-btn"
+            title="Vider la file d'attente (deux clics : le second confirme)">Vider</button>
+          <button type="button" class="info" aria-describedby="tip-auto" aria-label="Aide : remplissage automatique">ⓘ<span class="info-tip below" id="tip-auto" role="tooltip">Remplit la file automatiquement quand elle descend sous le seuil. Évite doublons, artistes rapprochés et morceaux récents.</span></button>
+        </div>
+      </div>
+      <ol id="queue" class="list" aria-label="Prochains morceaux"></ol>
+    </section>
+
+    <section id="col-bank" aria-label="Banque de morceaux">
+      <div class="col-head">
+        <div class="ch-l"><h2>Banque</h2></div>
+        <div class="auto-ctl">
+          <button id="btn-bank-clear" type="button" class="auto-btn clear-btn"
+            title="Supprime les fichiers importés et téléchargés (dossier downloads/). Votre dossier musique personnel n'est jamais modifié.">Vider imports</button>
+          <button type="button" class="info" aria-describedby="tip-bank" aria-label="Aide : vider les imports">ⓘ<span class="info-tip below" id="tip-bank" role="tooltip">Supprime les imports et téléchargements d'Auto-DJ (dossier downloads/). Votre dossier musique personnel n'est jamais touché.</span></button>
+        </div>
+      </div>
+      <div class="bank-top">
+        <div class="bank-l1">
+          <input id="search" type="search" placeholder="Rechercher titre / artiste…" autocomplete="off" aria-label="Rechercher dans la banque">
+          <button id="btn-import" type="button" title="Importer des fichiers audio locaux (ou glissez-les ici)">＋ Importer</button>
+          <input id="file-input" type="file" multiple accept="audio/*,.mp3,.wav,.flac,.m4a,.ogg,.aac" hidden>
+          <span id="import-status" class="import-status" hidden><span class="spin" aria-hidden="true"></span>import en cours…</span>
+        </div>
+        <form id="dl-form" novalidate>
+          <input id="url" type="text" inputmode="url" placeholder="URL YouTube à télécharger…" autocomplete="off" spellcheck="false" aria-label="URL YouTube à télécharger">
+          <button id="btn-dl" type="submit">Télécharger</button>
+        </form>
+        <div id="jobs" class="jobs" hidden aria-live="polite"></div>
+      </div>
+      <ol id="bank" class="list" aria-label="Banque"></ol>
+    </section>
+
+  </section>
+</main>
+
+<div id="toasts" role="status" aria-live="polite"></div>
+
+<div id="menu" class="menu" role="menu" hidden></div>
+
+<div id="modal-wrap" class="modal-wrap" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-sub">
+    <h3 id="modal-title">Reprendre la soirée au même endroit ?</h3>
+    <p id="modal-sub" class="muted"></p>
+    <div class="modal-btns">
+      <button id="btn-restore-yes" type="button">Reprendre</button>
+      <button id="btn-restore-no" type="button">Nouvelle soirée</button>
+    </div>
+  </div>
+</div>
+
+<div id="shutdown" class="shutdown" role="status" aria-live="polite" hidden>
+  <div class="shutdown-card">
+    <h2>Auto-DJ est arrêté.</h2>
+    <p>Relancez-le depuis son icône (Auto-DJ) puis rechargez cette page.</p>
+    <button id="btn-reload" type="button">Recharger</button>
+  </div>
+</div>
+
+<div id="boot-banner" hidden>
+  L'interface n'a pas pu s'initialiser (erreur JS ou cache périmé).
+  <button type="button" onclick="location.href = location.pathname + '?v=' + Date.now()">Recharger la page</button>
+</div>
+<script>
+setTimeout(async () => {
+  if (window.AutoDJReady) return; // init OK (ou auto-réparée entre-temps)
+  const b = document.getElementById('boot-banner');
+  if (!b) return;
+  b.hidden = false;
+  try {
+    const r = await fetch('/api/state', { cache: 'no-store' });
+    if (!r.ok) throw new Error('/api/state → HTTP ' + r.status);
+    // Serveur vivant mais app.js mort ou jamais exécuté : on le récupère en fraîche URL
+    // et on le ré-exécute nous-mêmes (bypass tout cache/blocage de script).
+    const src = await (await fetch('app.js?boot=' + Date.now(), { cache: 'no-store' })).text();
+    try { new Function(src)(); } catch (e2) {
+      b.textContent = 'Erreur JS réelle : ' + (e2.message || e2) + ' — rapporte ce texte.';
+      return;
+    }
+    if (window.AutoDJReady) { b.hidden = true; return; } // auto-réparation réussie
+    b.textContent = 'app.js rechargé mais init incomplète — ouvre la console (F12).';
+  } catch (e) {
+    b.textContent = 'Serveur injoignable (' + (e.message || e) + ') — relance ./lancer.sh puis recharge.';
+  }
+}, 2500);
+</script>
+<script src="app.js"></script>
+</body>
+</html>

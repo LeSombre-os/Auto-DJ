@@ -1,0 +1,7 @@
+numpy
+fastapi
+uvicorn
+yt-dlp
+pytest
+httpx          # tests : TestClient starlette (multipart)
+sounddevice; sys_platform != "linux"   # Windows/macOS ; Linux = ALSA natif (output_alsa.py)
