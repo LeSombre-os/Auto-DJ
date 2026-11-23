@@ -546,6 +546,12 @@ button:disabled { opacity: .45; cursor: not-allowed; }
   font-size: 13px;
 }
 .menu-item:hover, .menu-item:focus-visible { background: color-mix(in srgb, var(--green) 14%, transparent); color: var(--green); }
+/* Suppression d'un import : rouge, confirmation en deux clics dans le menu */
+.menu-item.danger { color: var(--red); }
+.menu-item.danger:hover, .menu-item.danger:focus-visible {
+  background: color-mix(in srgb, var(--red) 16%, transparent); color: var(--red);
+}
+.menu-item.danger.armed { background: color-mix(in srgb, var(--red) 24%, transparent); font-weight: 700; }
 
 /* ---------- Modale restore ---------- */
 .modal-wrap {

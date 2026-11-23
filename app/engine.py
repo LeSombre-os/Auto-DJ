@@ -26,7 +26,8 @@ ENTER = 0.22                       # fondu d'entrée piste (promo sans crossfade
 TAIL = 0.03                        # rampe de fin de piste quand pas de crossfade
 GATE = 0.22                        # fondu du rendu : démarrage/reprise et pause/stop (s)
 PRELOAD = 2.0                      # ouverture piste suivante N s avant le début du fade
-SKIPFADE = 0.3                     # durée du fade skip / corrupt
+SKIP_MIN = 0.6                     # fondu de skip/audition : bornes (s), suit le crossfade réglé
+SKIP_MAX = 2.0
 CUT = 0.35                         # durée du fondu courbe "cut" (coupe franche sans clic)
 CORRUPT_SLACK = 0.25               # tolérance "EOF trop tôt" (s) vs cue_out
 END_EPS = 1e-3                     # epsilon de fin de piste : pos peut rester à 3e-14 de cue_out (arrondi float)
@@ -322,6 +323,17 @@ class Engine:
         """Longueur réglée, ou CUT quand la courbe est une coupe franche."""
         return CUT if self._xf_curve == "cut" else self._xf
 
+    def _skip_len(self) -> float:
+        """Fondu de skip / d'audition : suit le crossfade réglé (~xf/6), borné 0,6–2 s.
+
+        Un skip ne doit pas s'entendre comme une coupure (0,3 s) ni traîner comme un
+        crossfade de fin de piste (8 s). Courbe "cut" = l'utilisateur veut des coupes
+        franches : on garde CUT.
+        """
+        if self._xf_curve == "cut":
+            return CUT
+        return min(max(self._xf / 6.0, SKIP_MIN), SKIP_MAX)
+
     def set_volume(self, v: float):
         self._volume = min(max(float(v), 0.0), 1.0); self._retarget()
 
@@ -340,7 +352,7 @@ class Engine:
     def requeue(self, paths, start=False, cut=False):
         """File restaurée après audition. start=True + moteur à l'arrêt : démarre
         la première comme un play ; moteur en lecture : remplace la file future.
-        cut=True : l'audition audible est coupée (fade SKIPFADE) au profit de la file."""
+        cut=True : l'audition audible est coupée (fondu de skip) au profit de la file."""
         self._cmds.put(("requeue", (list(paths), bool(start), bool(cut))))
 
     def status(self) -> dict:
@@ -415,9 +427,9 @@ class Engine:
         elif k == "skip":
             if self._cur is None: return
             if self._queue or self._nxt is not None:
-                self._skip = True        # fade court dés que la suivante a des données
+                self._skip = True        # fondu de skip dès que la suivante a des données
             else:
-                self._fade = (self._t, SKIPFADE, True, False, self._xf_curve)   # fade-out rendu puis stop
+                self._fade = (self._t, self._skip_len(), True, False, self._xf_curve)   # fade-out rendu puis stop
         elif k == "pos":
             if self._cur is not None and self._cur.a is not None:
                 p = min(max(v, self._cur.a["cue_in"]), max(self._cur.a["cue_out"] - 0.05, 0.0))
@@ -442,7 +454,7 @@ class Engine:
             if self._nxt is not None:             # remplace une audition pas encore audible
                 self._nxt.kill()
             self._nxt = _Track(v, self._rate, self._data_dir, self._ffmpeg)
-            self._skip = True                     # fade court type skip (0,3 s) si une piste joue
+            self._skip = True                     # fondu de skip si une piste joue
             self._playing = True                  # l'audition démarre même moteur au repos
         elif k == "requeue":
             paths, start, cut = v
@@ -466,11 +478,11 @@ class Engine:
             was_preview = cut and self._cur is not None and self._cur.path == self._preview_path
             self._preview_path = None
             if was_preview and start:
-                self._skip = True                   # coupe 0,3 s puis la file enchaîne
+                self._skip = True                   # fondu de skip puis la file enchaîne
             elif was_preview:
                 # stop d'audition : la file est restaurée, donc pas de toast "file vide"
                 self._empty_fired = True
-                self._fade = (self._t, SKIPFADE, True, False, self._xf_curve)
+                self._fade = (self._t, self._skip_len(), True, False, self._xf_curve)
             elif start:
                 self._playing = True
 
@@ -635,7 +647,7 @@ class Engine:
                 self._open_next()
             if self._nxt is not None and self._fade is None:
                 if self._skip and self._ready(self._nxt):
-                    self._fade = (t0, min(SKIPFADE, max(a["cue_out"] - pos, TAIL)), True,
+                    self._fade = (t0, min(self._skip_len(), max(a["cue_out"] - pos, TAIL)), True,
                                   False, self._xf_curve)
                 elif (not self._skip and pos >= fs and self._ready(self._nxt)
                       and self._nxt.a is not None):

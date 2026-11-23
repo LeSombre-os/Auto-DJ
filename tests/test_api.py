@@ -800,6 +800,39 @@ def test_bank_clear_current_track_skips(tmp_path):
     assert wait_for(lambda: qpaths(js(app, "GET", "/api/state")[1]) == [], 8.0)
 
 
+def test_bank_remove_un_import(tmp_path):
+    """POST /api/bank/remove : supprime UN fichier de downloads/ et purge ses références."""
+    app, (pa,), mdir, ddir, dfl = app_for(tmp_path, files=1)
+    srv = srv_of(app)
+    d1 = Path(ddir) / "dl1.wav"; make_wav(d1)
+    srv._scan([str(ddir)])
+    assert wait_for(lambda: str(d1) in {r["path"] for r in srv.bank_rows()}), "scan downloads"
+    js(app, "POST", "/api/queue", {"paths": [str(d1), pa]})
+    srv.push_history(str(d1))
+    assert wait_for(lambda: qpaths(js(app, "GET", "/api/state")[1]) == [str(d1), pa])
+
+    st, r = js(app, "POST", "/api/bank/remove", {"path": str(d1)})
+    assert st == 200 and r["ok"] is True and r["removed"] == 1, (st, r)
+    assert not d1.exists() and Path(pa).exists()          # musique perso intacte
+    s = js(app, "GET", "/api/state")[1]
+    assert str(d1) not in {row["path"] for row in s["bank"]}
+    assert str(d1) not in s["history"]
+    assert wait_for(lambda: qpaths(js(app, "GET", "/api/state")[1]) == [pa]), "file purgée"
+
+
+def test_bank_remove_hors_downloads_refuse(tmp_path):
+    """Musique perso (lecture seule) et chemins invalides : refus, fichier intact."""
+    app, (pa,), mdir, ddir, dfl = app_for(tmp_path, files=1)
+    st, r = js(app, "POST", "/api/bank/remove", {"path": pa})
+    assert st == 403 and "error" in r and Path(pa).exists()
+    st, r = js(app, "POST", "/api/bank/remove", {"path": "/etc/passwd"})
+    assert st == 403
+    st, r = js(app, "POST", "/api/bank/remove", {})
+    assert st == 400
+    st, r = js(app, "POST", "/api/bank/remove", {"path": str(Path(ddir) / "absent.wav")})
+    assert st == 200 and r["removed"] == 0                # déjà absent : purge tolérante
+
+
 def test_bank_clear_scope_invalid(tmp_path):
     """scope inconnu -> 400 et rien n'est supprimé."""
     app, _p, _mdir, ddir, dfl = app_for(tmp_path, files=1)

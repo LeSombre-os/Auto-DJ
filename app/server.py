@@ -668,6 +668,44 @@ def build_app(music_dirs, downloads_dir, data_dir, out_factory=None) -> FastAPI:
             return err(added)
         return {"ok": True, **added}
 
+    def forget(gone: set) -> list[str]:
+        """Purge cues/banque/historique/file/audition des chemins réels supprimés."""
+        if gone:
+            try:                                        # cues des fichiers partis (tolérant)
+                cf = os.path.join(srv._data, "cues.json")
+                with open(cf) as f:
+                    cues = json.load(f)
+                if isinstance(cues, dict):
+                    keep = {k: v for k, v in cues.items() if os.path.realpath(k) not in gone}
+                    if len(keep) != len(cues):
+                        tmp = cf + ".tmp"
+                        with open(tmp, "w") as f:
+                            json.dump(keep, f)
+                        os.replace(tmp, cf)
+            except Exception:
+                pass                                    # absent/corrompu : rien à purger
+            with srv._lock:
+                srv._bank = {p: r for p, r in srv._bank.items()
+                             if os.path.realpath(p) not in gone}
+                srv._rows = {p: r for p, r in srv._rows.items()
+                             if os.path.realpath(p) not in gone}
+                srv._history = [p for p in srv._history if os.path.realpath(p) not in gone]
+        s = srv.engine.status()
+        qa = srv._preview_active
+        if qa:                                      # audition en cours : on ne la casse pas
+            real = [p for p in qa["real_queue"] if os.path.realpath(p) not in gone]
+            qa["real_queue"] = real
+            if os.path.realpath(qa["path"]) in gone:
+                srv._preview_active = None
+                srv.engine.requeue(real, start=qa.get("was_playing", False), cut=True)
+            return real
+        nxt = [p for p in s["next"] if os.path.realpath(p) not in gone]
+        if nxt != s["next"]:
+            put_queue(nxt)
+        if s["path"] and os.path.realpath(s["path"]) in gone:
+            srv.engine.skip()                       # piste courante supprimée : le moteur enchaîne
+        return nxt
+
     @app.post("/api/bank/clear")
     async def api_bank_clear(req: Request):
         """Vide downloads/ (imports + téléchargements) ; la musique perso n'est jamais touchée."""
@@ -691,41 +729,35 @@ def build_app(music_dirs, downloads_dir, data_dir, out_factory=None) -> FastAPI:
                     continue                        # fichier verrouillé : reste en banque
                 gone.add(rp)
                 removed += 1
-        try:                                        # cues des fichiers partis (tolérant)
-            cf = os.path.join(srv._data, "cues.json")
-            with open(cf) as f:
-                cues = json.load(f)
-            if isinstance(cues, dict):
-                keep = {k: v for k, v in cues.items() if os.path.realpath(k) not in gone}
-                if len(keep) != len(cues):
-                    tmp = cf + ".tmp"
-                    with open(tmp, "w") as f:
-                        json.dump(keep, f)
-                    os.replace(tmp, cf)
-        except Exception:
-            pass                                    # absent/corrompu : rien à purger
-        with srv._lock:
-            srv._bank = {p: r for p, r in srv._bank.items()
-                         if os.path.realpath(p) not in gone}
-            srv._rows = {p: r for p, r in srv._rows.items()
-                         if os.path.realpath(p) not in gone}
-            srv._history = [p for p in srv._history if os.path.realpath(p) not in gone]
-        s = srv.engine.status()
-        qa = srv._preview_active
-        if qa:                                      # audition en cours : on ne la casse pas
-            real = [p for p in qa["real_queue"] if os.path.realpath(p) not in gone]
-            qa["real_queue"] = real
-            if os.path.realpath(qa["path"]) in gone:
-                srv._preview_active = None
-                srv.engine.requeue(real, start=qa.get("was_playing", False), cut=True)
-            nxt = real
-        else:
-            nxt = [p for p in s["next"] if os.path.realpath(p) not in gone]
-            if nxt != s["next"]:
-                put_queue(nxt)
-            if s["path"] and os.path.realpath(s["path"]) in gone:
-                srv.engine.skip()                   # piste courante supprimée : le moteur enchaîne
+        nxt = forget(gone)
         srv._scan_async([srv._downloads])           # comme la fin d'un job de téléchargement
+        srv.save()
+        return {"ok": True, "removed": removed,
+                "bank": len(srv.bank_rows()), "queue": len(nxt)}
+
+    @app.post("/api/bank/remove")
+    async def api_bank_remove(req: Request):
+        """Supprime UN import/téléchargement (downloads/ seulement), références purgées.
+
+        La musique perso est en lecture seule : tout chemin hors de downloads/ est refusé.
+        Fichier déjà absent : on purge quand même les références (banque/file/historique).
+        """
+        b = await _body(req)
+        p = b.get("path")
+        if not isinstance(p, str) or not p.strip():
+            return err("path attendu")
+        root = os.path.realpath(srv._downloads)
+        rp = os.path.realpath(p)
+        if not rp.startswith(root + os.sep):
+            return err("seuls les imports/téléchargements sont supprimables", 403)
+        removed = 0
+        if os.path.exists(rp):
+            try:
+                os.unlink(rp)
+                removed = 1
+            except OSError as exc:                  # verrouillé (Windows : piste en lecture)
+                return err("suppression impossible : " + type(exc).__name__, 409)
+        nxt = forget({rp})
         srv.save()
         return {"ok": True, "removed": removed,
                 "bank": len(srv.bank_rows()), "queue": len(nxt)}

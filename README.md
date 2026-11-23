@@ -31,8 +31,10 @@ Local-first : tout tourne sur la machine, aucune donnée ne sort — hors télé
 - **Crossfade 2 à 16 s** avec 4 courbes : linéaire (`out+in=1`), égal-puissance (`out²+in²=1`), douce (smoothstep), coupe (gains linéaires, ≤ 0,35 s).
 - **Ducking** (`Espace`) : baisse du master à 25 % avec une rampe de 100 ms.
 - **Zéro silence** : cues détectés à −35 dBFS, fondu d'entrée/sortie de 220 ms, jamais de coupure sèche.
+- **Skip en fondu** : `N` (ou le bouton suivant) enchaîne avec un fondu de 0,6 à 2 s, proportionnel au crossfade réglé — jamais de coupure sèche ; l'audition (`double-clic`) utilise le même fondu.
 - **Audition** : écoute un morceau de la banque sans casser la file ; « Revenir à la file » (ou `Échap`) restaure la file et reprend la lecture si elle jouait avant l'écoute.
 - **Import local** : bouton `＋ Importer` ou glisser-déposer (mp3, wav, flac, aac, m4a, ogg ; 200 Mo max par fichier) ; un fichier déjà présent à l'identique (même contenu) est ignoré, le toast indique les deux compteurs.
+- **Suppression d'un import** : menu `⋮` d'une rangée de la banque → « Supprimer l'import » (confirmation en deux clics). Le fichier est effacé de `downloads/` et retiré de la banque, de la file et de l'historique. La musique perso n'est jamais supprimable.
 - **Téléchargement YouTube** via yt-dlp (2 jobs max), arrivée directe dans la banque.
 - **Restauration après crash** : proposition de reprendre la soirée au même endroit (piste, position, file, réglages).
 - **UI hors-ligne** : HTML/CSS/JS vanilla, aucun CDN, aucune ressource distante.
@@ -138,13 +140,13 @@ Souris :
 - **Clic** sur un morceau de la banque : l'insère après le titre courant.
 - **Double-clic** : écoute le morceau (audition) ; `Échap` restaure la file.
 - **Glisser-déposer** : banque → file, réordonner la file, fichiers de l'OS → banque.
-- **Menu `⋮`** (ou clic droit) : placer en piste suivante, ajouter à la fin, écouter, retirer de la file.
+- **Menu `⋮`** (ou clic droit) : placer en piste suivante, ajouter à la fin, écouter, retirer de la file ; sur un import, **supprimer l'import** (deux clics de confirmation).
 
 Boutons de l'interface :
 
 - **Remplir** : ajoute 10 morceaux à la file (anti-doublon, artistes espacés).
 - **Vider** : vide la file d'attente (confirmation en deux clics).
-- **Vider imports** : supprime les fichiers de `downloads/` (imports et téléchargements) ; le dossier musique personnel n'est jamais modifié.
+- **Vider imports** : supprime tous les fichiers de `downloads/` (imports et téléchargements) ; pour un seul morceau, menu `⋮` → « Supprimer l'import ». Le dossier musique personnel n'est jamais modifié.
 - **Tout couper** : arrête Auto-DJ, serveur compris (confirmation en deux clics).
 
 ## Désinstallation

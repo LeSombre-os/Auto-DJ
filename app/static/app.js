@@ -543,6 +543,24 @@ const App = (() => {
       });
   }
 
+  /* Suppression d'un import (downloads/ seulement) — le serveur refuse tout autre chemin. */
+  function removeImport(t) {
+    fetch('/api/bank/remove', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: t.path }),
+    })
+      .then(async (r) => {
+        const d = await r.json().catch(() => null);
+        if (!r.ok) { toast((d && d.error) || 'Suppression impossible', 'warn'); return; }
+        toast('Import supprimé : ' + (t.title || baseName(t.path)));
+        refresh();
+      })
+      .catch((e) => {
+        console.error('Auto-DJ bank/remove', e);
+        toast('Suppression impossible', 'warn');
+      });
+  }
+
   /* ---------- Vider la file : confirmation en deux temps (3 s) ---------- */
   let clearArmed = 0, clearT = 0;
   function disarmClear() {
@@ -746,6 +764,23 @@ const App = (() => {
     if (from === 'bank') {
       mk('Ajouter à la fin de la file', () => appendQueue(t.path));
       mk('Écouter (double-clic)', () => previewTrack(t));
+      if (isDownload(t)) {                 // musique perso : jamais supprimable
+        let armed = false;
+        const del = el('button', 'menu-item danger', "Supprimer l'import");
+        del.type = 'button';
+        del.setAttribute('role', 'menuitem');
+        del.addEventListener('click', () => {
+          if (!armed) {                    // 1er clic : arme, le menu reste ouvert
+            armed = true;
+            del.textContent = 'Confirmer la suppression';
+            del.classList.add('armed');
+            return;
+          }
+          closeMenu();
+          removeImport(t);
+        });
+        menu.appendChild(del);
+      }
     }
     if (from === 'queue') mk('Retirer de la file', () => removeFromQueue(t.path));
     menu.hidden = false;

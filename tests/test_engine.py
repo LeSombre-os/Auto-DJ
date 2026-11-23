@@ -13,7 +13,7 @@ import numpy as np
 import pytest
 
 import app.engine as eng
-from app.engine import Engine, analyze, waveform, xf_gains
+from app.engine import Engine, analyze, waveform, xf_gains, SKIP_MIN, SKIP_MAX
 
 RATE = 48000
 F_A, F_B = 40.0, 30.0
@@ -265,6 +265,30 @@ def test_queue_replace_skip_position(tmp_path):
     e.play_toggle()                                     # PLAY volontaire -> démarre à cue_in
     assert wait_for(lambda: any(d.get("path") == str(b) for d in names(evs, "track_started")), 10.0), evs
     assert e.status()["pos"] < 4.6                      # démarre à cue_in de B (~2.0)
+
+
+def test_skip_fondu_audible_pas_coupure(tmp_path):
+    """Skip / audition : fondu borné 0,6–2 s qui suit le crossfade réglé, pas 0,3 s."""
+    e, dummy, evs = engine_with(tmp_path, pace=0.002)
+    e.set_crossfade(8.0)
+    assert abs(e._skip_len() - 8.0 / 6.0) < 1e-9
+    e.set_crossfade(2.0)
+    assert e._skip_len() == SKIP_MIN                 # borne basse (2/6 -> 0,6)
+    e.set_crossfade(16.0)
+    assert e._skip_len() == SKIP_MAX                 # borne haute
+    e.set_crossfade_curve("cut")
+    assert e._skip_len() == eng.CUT                  # coupe franche voulue : on la garde
+
+    a = tmp_path / "a.wav"; make_wav(a, F_A)
+    b = tmp_path / "b.wav"; make_wav(b, F_B)
+    e.set_crossfade(8.0); e.set_crossfade_curve("equal_power")
+    e.set_queue([str(a), str(b)]); e.play_toggle()
+    assert wait_for(lambda: len(names(evs, "track_started")) == 1), evs
+    e.skip()
+    assert wait_for(lambda: e._fade is not None, 5.0), evs
+    L = e._fade[1]
+    assert SKIP_MIN <= L <= SKIP_MAX, L
+    assert wait_for(lambda: any(d.get("to") == str(b) for d in names(evs, "ended_fade")), 10.0), evs
 
 
 def test_duck_ratio(tmp_path):
