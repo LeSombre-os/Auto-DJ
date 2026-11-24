@@ -1,5 +1,5 @@
 ﻿#Requires -Version 5.1
-# Auto-DJ — arrête proprement le serveur (pid file, Stop-Process ciblé).
+# Seamless — arrête proprement le serveur (pid file, Stop-Process ciblé).
 $ErrorActionPreference = "Stop"
 Set-Location -LiteralPath $PSScriptRoot
 $pidFile = Join-Path $PSScriptRoot "data\server.pid"

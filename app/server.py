@@ -1,4 +1,4 @@
-"""Serveur Auto-DJ (S5) : API 1-doc, SSE, banque, autosave — `python -m app.server`.
+"""Serveur Seamless (S5) : API 1-doc, SSE, banque, autosave — `python -m app.server`.
 
 I/O longues jamais dans le thread serveur : scan banque -> thread de fond,
 waveform -> endpoint sync (threadpool anyio), yt-dlp -> pool de ytdl.py,
@@ -200,7 +200,7 @@ class Srv:
     def _scan_async(self, dirs=None) -> None:
         """Scan de fond non bloquant (fin de download, import, bank/clear)."""
         threading.Thread(target=self._scan, args=(dirs,), daemon=True,
-                         name="autodj-scan").start()
+                         name="seamless-scan").start()
 
     def _in_roots(self, p: str) -> bool:
         """Vrai si `p` est sous un dossier musique ou downloads/ (realpath, anti-traversée)."""
@@ -420,7 +420,7 @@ class Srv:
 
 def build_app(music_dirs, downloads_dir, data_dir, out_factory=None) -> FastAPI:
     srv = Srv(music_dirs, downloads_dir, data_dir, out_factory)
-    app = FastAPI(title="Auto-DJ", docs_url=None, redoc_url=None, openapi_url=None)
+    app = FastAPI(title="Seamless", docs_url=None, redoc_url=None, openapi_url=None)
 
     async def _body(req: Request) -> dict:
         try:
@@ -928,7 +928,7 @@ def build_app(music_dirs, downloads_dir, data_dir, out_factory=None) -> FastAPI:
 
 
 def _music_dirs(cli_dirs, downloads):
-    """--music-dir > AUTODJ_MUSIC_DIR (os.pathsep) > ~/Music, ./music s'ils existent.
+    """--music-dir > SEAMLESS_MUSIC_DIR (os.pathsep) > ~/Music, ./music s'ils existent.
 
     `downloads` est toujours scanné (en dernier). Aucun dossier créé ici : un chemin
     absent est simplement ignoré par le scan (seul downloads/ est créé par main()).
@@ -936,17 +936,17 @@ def _music_dirs(cli_dirs, downloads):
     if cli_dirs:
         dirs = list(cli_dirs)
     else:
-        dirs = [p for p in os.environ.get("AUTODJ_MUSIC_DIR", "").split(os.pathsep) if p]
+        dirs = [p for p in os.environ.get("SEAMLESS_MUSIC_DIR", "").split(os.pathsep) if p]
     if not dirs:
         dirs = [d for d in (os.path.expanduser("~/Music"), "music") if os.path.isdir(d)]
     return list(dict.fromkeys([os.path.expanduser(d) for d in dirs] + [downloads]))
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Auto-DJ — serveur UI/API local")
+    ap = argparse.ArgumentParser(description="Seamless — serveur UI/API local")
     ap.add_argument("--port", type=int, default=8092)
     ap.add_argument("--music-dir", action="append",        # répétable
-                    help="dossier musique (défaut : $AUTODJ_MUSIC_DIR, ~/Music, ./music)")
+                    help="dossier musique (défaut : $SEAMLESS_MUSIC_DIR, ~/Music, ./music)")
     ap.add_argument("--data-dir", default="data")
     ap.add_argument("--downloads", default="downloads")
     a = ap.parse_args()
@@ -955,8 +955,8 @@ def main():
     try:
         app = build_app(dirs, a.downloads, a.data_dir)
     except OSError as exc:                 # device audio absent : message net, pas de stack
-        raise SystemExit(f"Auto-DJ : démarrage impossible — {exc}")
-    print(f"Auto-DJ : banques {dirs}", flush=True)
+        raise SystemExit(f"Seamless : démarrage impossible — {exc}")
+    print(f"Seamless : banques {dirs}", flush=True)
     import uvicorn
     uvicorn.run(app, host="127.0.0.1", port=a.port, log_level="warning")
 

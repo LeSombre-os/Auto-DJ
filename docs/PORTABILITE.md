@@ -1,4 +1,4 @@
-# PORTABILITÉ — Auto-DJ-V1
+# PORTABILITÉ — Seamless
 
 « Vérifié » = exécuté sur cette machine (Linux). Windows et macOS sont **implémentés et
 couverts par la CI**, mais pas testés physiquement (aucun device audio Windows/macOS ici).
@@ -74,15 +74,15 @@ Les `.ps1` sont en **UTF-8 avec BOM** : PowerShell 5.1 lit sinon les accents en 
 
 `lancer.sh` détecte `xdg-open` puis `open` ; aucun `setsid`, aucune dépendance à `/proc`.
 
-**Raccourcis** — `./installer.sh` (Linux) écrit `~/.local/share/applications/auto-dj.desktop`
+**Raccourcis** — `./installer.sh` (Linux) écrit `~/.local/share/applications/seamless.desktop`
 (menu applications) et le copie sur `~/Bureau` ou `~/Desktop`, icône `app/static/icon.png`.
-`installer.ps1` (Windows) crée `Auto-DJ.lnk` sur le Bureau et dans le menu Démarrer, cible
+`installer.ps1` (Windows) crée `Seamless.lnk` sur le Bureau et dans le menu Démarrer, cible
 `wscript.exe lancer.vbs` : aucune fenêtre au lancement, icône `icon.ico`. Suppression = effacer
 ces raccourcis (aucune désinstallation, rien n'est copié ailleurs).
 
 ## Dossier musique
 
-`--music-dir` (répétable) > `AUTODJ_MUSIC_DIR` (séparateur `os.pathsep` : `:` Linux/macOS,
+`--music-dir` (répétable) > `SEAMLESS_MUSIC_DIR` (séparateur `os.pathsep` : `:` Linux/macOS,
 `;` Windows) > `~/Music` et `./music` **s'ils existent** > `downloads/` toujours inclus.
 Un chemin absent est ignoré sans crash et sans être créé ; le serveur ne crée que
 `downloads/` au démarrage (`data/` est créé par `lancer.sh`/`lancer.ps1`, ou au premier
@@ -91,10 +91,10 @@ enregistrement d'état) ; les doublons sont dédupliqués en gardant l'ordre (`_
 est chargé par `lancer.sh` :
 
 ```sh
-AUTODJ_MUSIC_DIR="$HOME/Musique"
+SEAMLESS_MUSIC_DIR="$HOME/Musique"
 ```
 
-Sous Windows `data\local.env` n'est pas lu : `$env:AUTODJ_MUSIC_DIR = "D:\Ma musique"`
+Sous Windows `data\local.env` n'est pas lu : `$env:SEAMLESS_MUSIC_DIR = "D:\Ma musique"`
 dans la session avant `.\lancer.ps1`.
 
 ## Dépannage

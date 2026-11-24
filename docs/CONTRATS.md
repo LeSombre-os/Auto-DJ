@@ -1,4 +1,4 @@
-# CONTRATS D'INTÉGRATION — Auto-DJ-V1
+# CONTRATS D'INTÉGRATION — Seamless
 
 Contrat unique pour tous les modules. Le respecter à la lettre : c'est le filet de sécurité entre sous-agents.
 
@@ -136,7 +136,7 @@ class Downloader:
   `_shutdown()` = pause + save + downloader, puis `os._exit(0)`). Idempotent.
 - `GET  /api/waveform?path=...` (→ list[float])
 - `GET  /api/events` (SSE : events engine + downloader + tick pos)
-- Banque : `--music-dir` (répétable) > `AUTODJ_MUSIC_DIR` (liste `os.pathsep`) > `~/Music` / `./music` ;
+- Banque : `--music-dir` (répétable) > `SEAMLESS_MUSIC_DIR` (liste `os.pathsep`) > `~/Music` / `./music` ;
   `downloads/` toujours inclus. Scan récursif au boot, ffprobe tags.
 - Serve static `app/static` (index réécrit avec `?v=<mtime>`), `Cache-Control: no-store` partout.
   `python -m app.server --port 8092 --music-dir ... --data-dir data --downloads downloads`

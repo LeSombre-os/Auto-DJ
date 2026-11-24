@@ -1,15 +1,16 @@
 #!/bin/sh
-# Auto-DJ — lance le serveur en arrière-plan et ouvre l'UI.
+# Seamless — lance le serveur en arrière-plan et ouvre l'UI.
 # Usage : ./lancer.sh [port]          (défaut 8092)
 #         ./lancer.sh --fg [port]     (premier plan, pour debug)
 cd "$(dirname "$0")" || exit 1
-# config locale non versionnée (ex. AUTODJ_MUSIC_DIR=...) : exportée vers le serveur
+# config locale non versionnée (ex. SEAMLESS_MUSIC_DIR=...) : exportée vers le serveur
 if [ -f data/local.env ]; then set -a; . ./data/local.env; set +a; fi
 mkdir -p data
 
-# interpréteur : AUTODJ_PY > .venv > ~/.venvs/autodj > python3
+# interpréteur : SEAMLESS_PY > .venv > ~/.venvs/seamless > ~/.venvs/autodj > python3
 PY=""
-for c in "${AUTODJ_PY:-}" ".venv/bin/python" "$HOME/.venvs/autodj/bin/python" python3; do
+for c in "${SEAMLESS_PY:-}" ".venv/bin/python" "$HOME/.venvs/seamless/bin/python" \
+         "$HOME/.venvs/autodj/bin/python" python3; do
   [ -n "$c" ] || continue
   if command -v "$c" >/dev/null 2>&1; then PY="$c"; break; fi
 done
@@ -56,11 +57,11 @@ if [ -f data/server.pid ]; then
       ;;
   esac
 fi
-# un Auto-DJ répond déjà sur ce port alors que le pid file est absent/obsolète :
+# Seamless répond déjà sur ce port alors que le pid file est absent/obsolète :
 # lancer une 2e instance échouerait sur le bind, mais /api/state répondrait pour
 # l'ancienne -> « en ligne » mensonger et pid file pointant sur un process mort.
 if curl -sf -o /dev/null "http://127.0.0.1:$PORT/api/state"; then
-  echo "un Auto-DJ répond déjà sur $PORT sans pid file valide — arrêtez-le (puis relancez) ou changez de port"
+  echo "Seamless répond déjà sur $PORT sans pid file valide — arrêtez-le (puis relancez) ou changez de port"
   exit 1
 fi
 nohup "$PY" -m app.server --port "$PORT" >> data/server.log 2>&1 < /dev/null &
@@ -80,4 +81,4 @@ if [ $i -ge 60 ]; then
   exit 1
 fi
 open_ui "http://127.0.0.1:$PORT/"
-echo "Auto-DJ en ligne : http://127.0.0.1:$PORT/ (pid $(cat data/server.pid))"
+echo "Seamless en ligne : http://127.0.0.1:$PORT/ (pid $(cat data/server.pid))"

@@ -1,4 +1,4 @@
-/* Auto-DJ — UI logique. Vanilla ES2020+, aucun framework, aucun réseau externe.
+/* Seamless — UI logique. Vanilla ES2020+, aucun framework, aucun réseau externe.
    Contrat d'endpoints : docs/CONTRATS.md § app/server.py.
    Anti-crash : tout fetch sous try/catch, badge "perte de liaison" après 6 polls
    échoués, erreurs JS → toast rouge + console.error (plus rien de silencieux). */
@@ -33,7 +33,7 @@ const App = (() => {
       ' idsInDom=' + all.length + ' sample=[' + sample + ']' +
       ' url=' + location.href;
     const msg = 'DOM incomplet (' + diag + ') — ' + missing.length + ' IDs manquants, liste en console (F12)';
-    console.error('Auto-DJ: DOM incomplet (' + diag + ') IDs manquants:', missing.join(', '));
+    console.error('Seamless: DOM incomplet (' + diag + ') IDs manquants:', missing.join(', '));
     const bb = $('boot-banner');
     if (bb) { bb.hidden = false; bb.textContent = msg; } // panne persistante = visible, pas un toast de 4 s
     return null;
@@ -42,7 +42,7 @@ const App = (() => {
   /* Toute panne JS devient visible : toast rouge + bandeau de boot tant que l'init n'a pas réussi. */
   const bootFail = (m) => {
     const bb = $('boot-banner');
-    if (bb && !window.AutoDJReady) { bb.hidden = false; bb.textContent = m; }
+    if (bb && !window.SeamlessReady) { bb.hidden = false; bb.textContent = m; }
   };
   window.addEventListener('error', (e) => { const m = '⚠️ Erreur : ' + (e.message || e.type); toast(m, 'err'); bootFail(m); });
   window.addEventListener('unhandledrejection', (e) => { const m = '⚠️ Erreur réseau : ' + (e.reason?.message || e.reason); toast(m, 'err'); bootFail(m); });
@@ -104,7 +104,7 @@ const App = (() => {
       }
       return d;
     } catch (e) {
-      console.error('Auto-DJ API', path, e);
+      console.error('Seamless API', path, e);
       throw e;
     }
   }
@@ -556,7 +556,7 @@ const App = (() => {
         refresh();
       })
       .catch((e) => {
-        console.error('Auto-DJ bank/remove', e);
+        console.error('Seamless bank/remove', e);
         toast('Suppression impossible', 'warn');
       });
   }
@@ -642,7 +642,7 @@ const App = (() => {
         refresh();
       })
       .catch((e) => {
-        console.error('Auto-DJ bank/clear', e);
+        console.error('Seamless bank/clear', e);
         toast('Impossible de vider la banque', 'warn');
       });
   }
@@ -948,7 +948,7 @@ const App = (() => {
       waveCache.set(path, arr);
       if (path === wavePath) updateNowPlaying();
     } catch (e) {
-      console.error('Auto-DJ waveform', e);
+      console.error('Seamless waveform', e);
       waveCache.set(path, []); // fallback barre plate
       if (path === wavePath) updateNowPlaying();
     }
@@ -1117,7 +1117,7 @@ const App = (() => {
       else toast(skipped ? 'Déjà importés : ' + skipped : 'Aucun fichier importé');
       refresh();
     } catch (e) {
-      console.error('Auto-DJ import', e);
+      console.error('Seamless import', e);
       toast('Import impossible', 'warn');
     } finally {
       importing = false;
@@ -1362,6 +1362,6 @@ const App = (() => {
   pollT = setInterval(poll, 1000);
   try { connectSSE(); } catch (e) { console.error('SSE indisponible', e); }
 
-  window.AutoDJReady = true; // sentinelle boot-banner : prouve que l'IIFE a fini sans mourir
+  window.SeamlessReady = true; // sentinelle boot-banner : prouve que l'IIFE a fini sans mourir
   return { refresh, toast }; // pour debug console
 })();

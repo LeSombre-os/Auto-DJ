@@ -1,4 +1,4 @@
-"""Sortie audio native ALSA via ctypes (libasound.so.2) — backend de lecture d'Auto-DJ.
+"""Sortie audio native ALSA via ctypes (libasound.so.2) — backend de lecture de Seamless.
 
 Un flux stéréo FLOAT_LE, pacing temps réel par writei bloquant. Aucune dépendance
 PortAudio/sounddevice (libportaudio2 absente de la machine ; libasound.so.2 présente).

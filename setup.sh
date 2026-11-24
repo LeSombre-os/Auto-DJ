@@ -1,7 +1,7 @@
 #!/bin/sh
-# Auto-DJ — crée .venv et installe les dépendances (à lancer une fois).
+# Seamless — crée .venv et installe les dépendances (à lancer une fois).
 cd "$(dirname "$0")" || exit 1
-PY="${AUTODJ_PY:-python3}"
+PY="${SEAMLESS_PY:-python3}"
 command -v "$PY" >/dev/null 2>&1 || {
   echo "Python 3 introuvable — Linux : sudo apt install python3 python3-venv ; macOS : brew install python"
   exit 1; }

@@ -1,5 +1,5 @@
 ﻿#Requires -Version 5.1
-# Auto-DJ — lance le serveur en arrière-plan et ouvre l'UI (Windows).
+# Seamless — lance le serveur en arrière-plan et ouvre l'UI (Windows).
 # Usage : .\lancer.ps1 [-Port 8092] [-Setup]
 [CmdletBinding()]
 param(
@@ -92,4 +92,4 @@ if (-not $ok) {
     exit 1
 }
 Start-Process "$url/" -ErrorAction SilentlyContinue
-Write-Host "Auto-DJ en ligne : $url/ (pid $($p.Id))"
+Write-Host "Seamless en ligne : $url/ (pid $($p.Id))"

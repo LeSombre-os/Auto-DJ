@@ -1,5 +1,5 @@
 ﻿#Requires -Version 5.1
-# Auto-DJ — crée .venv et installe les dépendances (à lancer une fois, Windows).
+# Seamless — crée .venv et installe les dépendances (à lancer une fois, Windows).
 $ErrorActionPreference = "Stop"
 Set-Location -LiteralPath $PSScriptRoot
 $env:PYTHONUTF8 = "1"

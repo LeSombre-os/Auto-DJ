@@ -1,4 +1,4 @@
-# Auto-DJ
+# Seamless
 
 DJ de soirée autonome : il enchaîne les morceaux sans aucun silence, gère la file en direct et baisse le son pour les prises de parole.
 Local-first : tout tourne sur la machine, aucune donnée ne sort — hors téléchargements YouTube explicitement demandés.
@@ -100,26 +100,26 @@ brew install ffmpeg          # macOS
 powershell -ExecutionPolicy Bypass -File installer.ps1   # Windows : Bureau + menu Démarrer
 ```
 
-Double-clic sur **Auto-DJ** : serveur en arrière-plan, UI ouverte, sans console sous Windows.
+Double-clic sur **Seamless** : serveur en arrière-plan, UI ouverte, sans console sous Windows.
 
 ## Dossier musique
 
 Ordre de résolution :
 
 1. `--music-dir` (répétable) ;
-2. `AUTODJ_MUSIC_DIR` — dossiers séparés par `os.pathsep` (`:` sous Linux/macOS, `;` sous Windows) ;
+2. `SEAMLESS_MUSIC_DIR` — dossiers séparés par `os.pathsep` (`:` sous Linux/macOS, `;` sous Windows) ;
 3. `~/Music` et `./music` (s'ils existent) ;
 4. `downloads/` est toujours inclus.
 
 Pour fixer le dossier sans argument, créer `data/local.env` (dossier ignoré par git ; le fichier n'est pas créé automatiquement). Sous Linux/macOS, `lancer.sh` le charge s'il existe :
 
 ```sh
-AUTODJ_MUSIC_DIR=/chemin/vers/ma/musique
+SEAMLESS_MUSIC_DIR=/chemin/vers/ma/musique
 ```
 
-Sous Windows : définir `$env:AUTODJ_MUSIC_DIR = "D:\Ma musique"` dans la session PowerShell avant `.\lancer.ps1`.
+Sous Windows : définir `$env:SEAMLESS_MUSIC_DIR = "D:\Ma musique"` dans la session PowerShell avant `.\lancer.ps1`.
 
-Les dossiers de musique sont ouverts en lecture seule : Auto-DJ n'y écrit ni n'y supprime jamais rien.
+Les dossiers de musique sont ouverts en lecture seule : Seamless n'y écrit ni n'y supprime jamais rien.
 
 Les dossiers `data/` et `downloads/` sont créés au premier lancement et ne sont jamais versionnés.
 
@@ -147,7 +147,7 @@ Boutons de l'interface :
 - **Remplir** : ajoute 10 morceaux à la file (anti-doublon, artistes espacés).
 - **Vider** : vide la file d'attente (confirmation en deux clics).
 - **Vider imports** : supprime tous les fichiers de `downloads/` (imports et téléchargements) ; pour un seul morceau, menu `⋮` → « Supprimer l'import ». Le dossier musique personnel n'est jamais modifié.
-- **Tout couper** : arrête Auto-DJ, serveur compris (confirmation en deux clics).
+- **Tout couper** : arrête Seamless, serveur compris (confirmation en deux clics).
 
 ## Désinstallation
 
@@ -157,15 +157,15 @@ Boutons de l'interface :
    Linux :
 
    ```sh
-   rm -f ~/.local/share/applications/auto-dj.desktop ~/Bureau/auto-dj.desktop ~/Desktop/auto-dj.desktop
+   rm -f ~/.local/share/applications/seamless.desktop ~/Bureau/seamless.desktop ~/Desktop/seamless.desktop
    update-desktop-database ~/.local/share/applications 2>/dev/null
    ```
 
    Windows (PowerShell) :
 
    ```powershell
-   Remove-Item "$([Environment]::GetFolderPath('Desktop'))\Auto-DJ.lnk" -ErrorAction SilentlyContinue
-   Remove-Item "$([Environment]::GetFolderPath('Programs'))\Auto-DJ.lnk" -ErrorAction SilentlyContinue
+   Remove-Item "$([Environment]::GetFolderPath('Desktop'))\Seamless.lnk" -ErrorAction SilentlyContinue
+   Remove-Item "$([Environment]::GetFolderPath('Programs'))\Seamless.lnk" -ErrorAction SilentlyContinue
    ```
 
 3. **Supprimer le dossier du projet** : il contient tout le reste (code, `.venv/`, `data/`, `downloads/`).
@@ -183,7 +183,7 @@ Pour ne garder que le code : supprimer `data/`, `downloads/` et `.venv/` sans ef
 ## Architecture
 
 ```
-Auto-DJ-V1/
+Seamless/
 ├── app/
 │   ├── engine.py        # moteur : mixage, crossfade, cues, ducking
 │   ├── output_alsa.py   # sortie ALSA native (Linux, ctypes)

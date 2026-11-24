@@ -4,18 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
-<title>Auto-DJ</title>
+<title>Seamless</title>
 <link rel="icon" type="image/png" href="/static/icon.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header id="topbar">
-  <div class="brand" title="Raccourcis : N = suivant · P = lecture/pause · F = rechercher · A = auto-file · + / − = volume · Espace = ducking"><span class="dot"></span>AUTO-DJ</div>
+  <div class="brand" title="Raccourcis : N = suivant · P = lecture/pause · F = rechercher · A = auto-file · + / − = volume · Espace = ducking"><span class="dot"></span>SEAMLESS</div>
   <div class="top-right">
     <div id="link-badge" class="badge-off" hidden>Perte de liaison</div>
     <button id="btn-quit" type="button" class="quit-btn clear-btn"
-      title="Arrêter complètement Auto-DJ, serveur compris (deux clics : le second confirme)">Tout couper</button>
+      title="Arrêter complètement Seamless, serveur compris (deux clics : le second confirme)">Tout couper</button>
   </div>
 </header>
 
@@ -117,7 +117,7 @@
         <div class="auto-ctl">
           <button id="btn-bank-clear" type="button" class="auto-btn clear-btn"
             title="Supprime les fichiers importés et téléchargés (dossier downloads/). Votre dossier musique personnel n'est jamais modifié.">Vider imports</button>
-          <button type="button" class="info" aria-describedby="tip-bank" aria-label="Aide : vider les imports">ⓘ<span class="info-tip below" id="tip-bank" role="tooltip">Supprime les imports et téléchargements d'Auto-DJ (dossier downloads/). Votre dossier musique personnel n'est jamais touché.</span></button>
+          <button type="button" class="info" aria-describedby="tip-bank" aria-label="Aide : vider les imports">ⓘ<span class="info-tip below" id="tip-bank" role="tooltip">Supprime les imports et téléchargements de Seamless (dossier downloads/). Votre dossier musique personnel n'est jamais touché.</span></button>
         </div>
       </div>
       <div class="bank-top">
@@ -156,8 +156,8 @@
 
 <div id="shutdown" class="shutdown" role="status" aria-live="polite" hidden>
   <div class="shutdown-card">
-    <h2>Auto-DJ est arrêté.</h2>
-    <p>Relancez-le depuis son icône (Auto-DJ) puis rechargez cette page.</p>
+    <h2>Seamless est arrêté.</h2>
+    <p>Relancez-le depuis son icône (Seamless) puis rechargez cette page.</p>
     <button id="btn-reload" type="button">Recharger</button>
   </div>
 </div>
@@ -168,7 +168,7 @@
 </div>
 <script>
 setTimeout(async () => {
-  if (window.AutoDJReady) return; // init OK (ou auto-réparée entre-temps)
+  if (window.SeamlessReady) return; // init OK (ou auto-réparée entre-temps)
   const b = document.getElementById('boot-banner');
   if (!b) return;
   b.hidden = false;
@@ -182,7 +182,7 @@ setTimeout(async () => {
       b.textContent = 'Erreur JS réelle : ' + (e2.message || e2) + ' — rapporte ce texte.';
       return;
     }
-    if (window.AutoDJReady) { b.hidden = true; return; } // auto-réparation réussie
+    if (window.SeamlessReady) { b.hidden = true; return; } // auto-réparation réussie
     b.textContent = 'app.js rechargé mais init incomplète — ouvre la console (F12).';
   } catch (e) {
     b.textContent = 'Serveur injoignable (' + (e.message || e) + ') — relance ./lancer.sh puis recharge.';

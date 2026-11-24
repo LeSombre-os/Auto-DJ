@@ -1,4 +1,4 @@
-"""Téléchargement Auto-DJ : yt-dlp en sous-process, max 2 jobs, jamais le thread serveur.
+"""Téléchargement Seamless : yt-dlp en sous-process, max 2 jobs, jamais le thread serveur.
 
 Le fichier produit est repéré par diff des fichiers de dest_dir avant/après le
 sous-process (ponytail: --no-part + gabarit %(title)s-%(id)s => le job laisse

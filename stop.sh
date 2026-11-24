@@ -1,5 +1,5 @@
 #!/bin/sh
-# Auto-DJ — arrête proprement le serveur (pid file, kill ciblé).
+# Seamless — arrête proprement le serveur (pid file, kill ciblé).
 cd "$(dirname "$0")" || exit 1
 [ -f data/server.pid ] || { echo "pas de data/server.pid"; exit 0; }
 PID="$(cat data/server.pid)"

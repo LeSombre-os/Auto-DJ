@@ -1,12 +1,12 @@
 #!/bin/sh
-# Auto-DJ — installe un raccourci de bureau et une entrée de menu (Linux).
+# Seamless — installe un raccourci de bureau et une entrée de menu (Linux).
 # Usage : ./installer.sh
-# Crée ~/.local/share/applications/auto-dj.desktop (+ copie sur le Bureau s'il existe).
+# Crée ~/.local/share/applications/seamless.desktop (+ copie sur le Bureau s'il existe).
 cd "$(dirname "$0")" || exit 1
 ABS=$(pwd)
 
 APP_DIR="$HOME/.local/share/applications"
-DESKTOP_FILE="$APP_DIR/auto-dj.desktop"
+DESKTOP_FILE="$APP_DIR/seamless.desktop"
 
 chmod +x lancer.sh stop.sh 2>/dev/null
 
@@ -17,7 +17,7 @@ mkdir -p "$APP_DIR" || { echo "impossible de créer $APP_DIR"; exit 1; }
 cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Auto-DJ
+Name=Seamless
 Comment=DJ de soirée autonome
 Exec=$(q "$ABS/lancer.sh")
 Path=$ABS
@@ -32,11 +32,11 @@ echo "entrée de menu : $DESKTOP_FILE"
 # copie sur le Bureau (premier dossier existant)
 for d in "$HOME/Bureau" "$HOME/Desktop"; do
   if [ -d "$d" ]; then
-    cp "$DESKTOP_FILE" "$d/auto-dj.desktop" && chmod +x "$d/auto-dj.desktop" \
-      && echo "raccourci bureau : $d/auto-dj.desktop"
+    cp "$DESKTOP_FILE" "$d/seamless.desktop" && chmod +x "$d/seamless.desktop" \
+      && echo "raccourci bureau : $d/seamless.desktop"
     # GNOME : marquer comme fiable (sinon « lanceur non approuvé »)
     command -v gio >/dev/null 2>&1 && \
-      gio set "$d/auto-dj.desktop" metadata::trusted true 2>/dev/null
+      gio set "$d/seamless.desktop" metadata::trusted true 2>/dev/null
     break
   fi
 done
@@ -45,5 +45,5 @@ if command -v update-desktop-database >/dev/null 2>&1; then
   update-desktop-database "$APP_DIR" 2>/dev/null
 fi
 
-echo "terminé — Auto-DJ est dans le menu applications ; désinstallation : rm \"$DESKTOP_FILE\""
+echo "terminé — Seamless est dans le menu applications ; désinstallation : rm \"$DESKTOP_FILE\""
 exit 0

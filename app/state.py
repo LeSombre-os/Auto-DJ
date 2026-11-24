@@ -1,4 +1,4 @@
-"""État de session Auto-DJ : data/state.json — écriture atomique, lecture tolérante.
+"""État de session Seamless : data/state.json — écriture atomique, lecture tolérante.
 
 Fonctions simples, pas de classe : le serveur décide QUAND sauvegarder (timer 2 s +
 chaque mutation + à l'arrêt). save()/load() normalisent toujours vers le SCHEMA

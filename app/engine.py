@@ -1,4 +1,4 @@
-"""Moteur Auto-DJ : mixage stéréo float32, crossfade sur cues, ducking, zéro silence.
+"""Moteur Seamless : mixage stéréo float32, crossfade sur cues, ducking, zéro silence.
 
 Un thread mixeur unique propriétaire du rendu ; l'horloge est le `out.write()` bloquant
 (pacing device). Une piste ouverte = un thread lecteur + un sous-process ffmpeg

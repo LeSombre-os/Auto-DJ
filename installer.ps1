@@ -1,5 +1,5 @@
 ﻿#Requires -Version 5.1
-# Auto-DJ — raccourcis Windows : Bureau + menu Démarrer, lancement sans console.
+# Seamless — raccourcis Windows : Bureau + menu Démarrer, lancement sans console.
 # Usage : powershell -ExecutionPolicy Bypass -File .\installer.ps1
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
@@ -25,7 +25,7 @@ $shell = New-Object -ComObject WScript.Shell
 foreach ($d in $dossiers) {
     if ([string]::IsNullOrEmpty($d)) { continue }
     New-Item -ItemType Directory -Force -Path $d | Out-Null
-    $lnkPath = Join-Path $d "Auto-DJ.lnk"
+    $lnkPath = Join-Path $d "Seamless.lnk"
     $lnk = $shell.CreateShortcut($lnkPath)
     $lnk.TargetPath = Join-Path $env:SystemRoot "System32\wscript.exe"
     $lnk.Arguments = "`"$vbs`""
@@ -35,6 +35,6 @@ foreach ($d in $dossiers) {
     $lnk.Save()
     Write-Host "raccourci : $lnkPath"
 }
-Write-Host "terminé — Auto-DJ est sur le Bureau et dans le menu Démarrer (sans fenêtre au lancement)."
+Write-Host "terminé — Seamless est sur le Bureau et dans le menu Démarrer (sans fenêtre au lancement)."
 Write-Host "désinstallation : supprimer les raccourcis ci-dessus."
 exit 0
